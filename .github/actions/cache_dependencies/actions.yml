@@ -1,0 +1,30 @@
+name: Cache dependencies
+description: node_modules cache action
+
+inputs:
+  file_name:
+    description: lock file name
+    require: true
+  save_cache:
+    description: save cache
+    required: false
+    default: "false"
+  working_directory:
+    description: working directory
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Restore dependencies cache
+      if: ${{ inputs.save_cache != 'true' }}
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ inputs.working_directory }}/node_modules
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles(format('{0}/{1}', inputs.working_directory, inputs.file_name)) }}
+    - name: Restore & Save dependencies cache
+      if: ${{ inputs.save_cache == 'true' }}
+      uses: actions/cache@v4
+      with:
+        path: ${{ inputs.working_directory }}/node_modules
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles(format('{0}/{1}', inputs.working_directory, inputs.file_name)) }}
