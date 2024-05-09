@@ -1,0 +1,48 @@
+name: Deploy Cloud Functions
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      working-directory: functions
+      with:
+        cache: yarn
+        node-version-file: .tool-versions
+
+    - name: Install dependencies
+      working-directory: functions
+      run:
+        yarn install --frozen-lockfile
+
+    - id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_ID }}
+        service_account: github-deploy@${{ vars.PROJECT_ID }}.iam.gserviceaccount.com
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    # https://github.com/google-github-actions/deploy-cloud-functions/issues/304
+    - name: Deploy Cloud Functions
+      run: >-
+        gcloud functions deploy ${{ vars.FUNCTIONS_ID }}
+        --gen2
+        --runtime=nodejs20
+        --region=asia-northeast1
+        --source=./functions
+        --entry-point=helloWorld
+        --trigger-http
+        --no-allow-unauthenticated
+        --set-env-vars GCP_PROJECT=${{ vars.PROJECT_ID }}
+        --run-service-account github-deploy@${{ vars.PROJECT_ID }}.iam.gserviceaccount.com

@@ -1,0 +1,9 @@
+{
+  "projects": {
+    "default": "fluflu-cbab7",
+    "dev": "fluflu-cbab7"
+  },
+  "targets": {},
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
+}
